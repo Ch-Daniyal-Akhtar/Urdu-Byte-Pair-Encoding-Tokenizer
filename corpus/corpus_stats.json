@@ -1,0 +1,36 @@
+{
+  "train": {
+    "bytes": 626210861,
+    "mebibytes": 597.2012147903442,
+    "documents": 127173,
+    "characters": 355815199,
+    "words": 73175999,
+    "sha256": "9fe72f3b265bedf368b799687725cd02f8d335a3d97813872e138600d9ceccea",
+    "valid_utf8": true
+  },
+  "val": {
+    "bytes": 6193229,
+    "mebibytes": 5.906323432922363,
+    "documents": 1297,
+    "characters": 3521362,
+    "words": 723219,
+    "sha256": "56ce23e7acb1e6578222ead036b37628fc309f60ad83c6667c32ab736fbf616b",
+    "valid_utf8": true
+  },
+  "test": {
+    "bytes": 6226186,
+    "mebibytes": 5.937753677368164,
+    "documents": 1300,
+    "characters": 3542773,
+    "words": 728352,
+    "sha256": "9a43bb379139d549b1187a626fcf6ed3ba52d1bc65e86ea54e9965e1387f95e6",
+    "valid_utf8": true
+  },
+  "total": {
+    "bytes": 638630276,
+    "mebibytes": 609.0452919006348,
+    "documents": 129770,
+    "words": 74627570,
+    "unique_words": 857782
+  }
+}

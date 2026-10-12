@@ -1,0 +1,31 @@
+{
+  "dtype": "uint16",
+  "train": {
+    "input": "corpus/train.txt",
+    "output": "data/train.bin",
+    "documents": 127173,
+    "tokens": 88404583,
+    "minimum_token_id": 0,
+    "maximum_token_id": 49999,
+    "output_bytes": 176809166,
+    "bytes_per_token": 7.083466034786907,
+    "elapsed_seconds": 857.3520505999913,
+    "tokens_per_second": 103113.51438202403,
+    "input_sha256": "9fe72f3b265bedf368b799687725cd02f8d335a3d97813872e138600d9ceccea",
+    "output_sha256": "ab828831eb254c8d6322f23f52e9903e76b2a306fa86d0e98dc43e8d6871f0a7"
+  },
+  "validation": {
+    "input": "corpus/val.txt",
+    "output": "data/val.bin",
+    "documents": 1297,
+    "tokens": 876941,
+    "minimum_token_id": 0,
+    "maximum_token_id": 49999,
+    "output_bytes": 1753882,
+    "bytes_per_token": 7.062309779107147,
+    "elapsed_seconds": 9.892941200057976,
+    "tokens_per_second": 88643.10241678792,
+    "input_sha256": "56ce23e7acb1e6578222ead036b37628fc309f60ad83c6667c32ab736fbf616b",
+    "output_sha256": "160c9951f6e3e94fef8f51a826582cd830d76a24d9867d85d1699be983fcb723"
+  }
+}

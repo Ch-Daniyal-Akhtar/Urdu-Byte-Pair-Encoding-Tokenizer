@@ -1,0 +1,41 @@
+# Virtual Environment
+.venv/
+venv/
+ENV/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Large files supplied through the shared-drive link
+corpus/train.txt
+corpus/val.txt
+corpus/test.txt
+data/train.bin
+data/val.bin
+
+# Raw, cleaned, and document-level corpus intermediates
+corpus/raw/
+corpus/cleaned/
+corpus/split_manifest.jsonl
+corpus/*.txt
+data/*.bin
+*.bin
+
+# Downloads & compressed archives
+corpus/downloads/
+*.zip
+*.gz
+*.tar.gz
+*.tar.bz2
+*.xz
+
+# OS / Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+report/.browser-profile/
+Assignment 1 - Urdu BPE Tokenizer from Scratch*.pdf

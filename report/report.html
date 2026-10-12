@@ -1,0 +1,159 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>
+@page { size: A4; margin: 12mm 16mm; }
+* { box-sizing: border-box; }
+body { margin:0; color:#202020; font-family:'Times New Roman','Noto Nastaliq Urdu',serif; font-size:8.65pt; line-height:1.23; }
+.page { height:273mm; page-break-after:always; overflow:hidden; position:relative; }
+.page:last-child { page-break-after:auto; }
+.running-head { display:flex; justify-content:space-between; border-bottom:.45px solid #a9a9a9; color:#666; font-size:7pt; padding-bottom:1mm; margin-bottom:5mm; }
+h1 { font-size:17pt; margin:0 0 2mm; color:#111; }
+h2 { font-size:11.5pt; margin:3mm 0 1mm; color:#111; }
+h3 { font-size:9pt; margin:2mm 0 .5mm; color:#111; }
+p { margin:.8mm 0 1.5mm; text-align:justify; }
+table { width:100%; border-collapse:collapse; margin:1mm 0 1.8mm; }
+th { background:#e8ebee; font-weight:bold; }
+th,td { border-top:.45px solid #aaa; border-bottom:.45px solid #d1d1d1; padding:.65mm 1mm; vertical-align:top; }
+thead tr:first-child th { border-top:1px solid #555; border-bottom:.7px solid #777; }
+tbody tr:last-child td { border-bottom:1px solid #555; }
+.compact td,.compact th { padding:.45mm .8mm; font-size:7.25pt; }
+.merge-grid { table-layout:fixed; }
+.merge-grid td { width:10%; font-size:6.25pt; padding:.55mm; border-left:.35px solid #ccc; }
+.muted { color:#666; font-size:6.25pt; }
+.rtl { direction:rtl; text-align:right; font-family:'Noto Nastaliq Urdu','Segoe UI',serif; }
+.two { display:grid; grid-template-columns:1fr 1fr; gap:4mm; align-items:start; }
+.plot { display:block; width:100%; max-height:61mm; object-fit:contain; }
+.caption { text-align:center; color:#666; font-size:7pt; font-style:italic; margin:.5mm 0 2mm; }
+.token { max-width:102mm; overflow-wrap:anywhere; }
+.sample { text-align:center; font-size:8.2pt; margin:.5mm 5mm; }
+.pieces { color:#666; font-size:6.8pt; margin-top:0; }
+.footer { position:absolute; bottom:0; width:100%; font-size:7.3pt; display:flex; justify-content:space-between; }
+code { font-family:Consolas,monospace; font-size:6.7pt; }
+ul { margin:1mm 0 1mm 4mm; padding-left:3mm; } li { margin:.4mm 0; }
+.cover { text-align:center; padding-top:19mm; }
+.cover .university { color:#17365d; font-size:16pt; font-weight:bold; }
+.cover .school { font-size:11pt; margin-top:2mm; }
+.cover hr { border:0; border-top:1px solid #555; margin:10mm 8mm 13mm; }
+.cover .course { font-size:13pt; font-weight:bold; }
+.cover .term { font-size:10pt; font-style:italic; margin-top:1mm; }
+.cover .assignment { margin-top:18mm; color:#666; font-size:11pt; }
+.cover .title { font-size:23pt; font-weight:bold; line-height:1.2; margin:4mm auto 2mm; max-width:150mm; }
+.cover .subtitle { font-size:11pt; font-style:italic; }
+.members { width:80%; margin:16mm auto 9mm; text-align:left; font-size:9pt; }
+.members caption { font-weight:bold; font-size:10pt; margin-bottom:2mm; }
+.submitted { font-size:10pt; margin-top:7mm; }
+.note { margin-top:17mm; font-size:8.5pt; }
+</style></head><body>
+
+<section class="page cover">
+  <div class="university">National University of Sciences &amp; Technology</div>
+  <div class="school">School of Electrical Engineering and Computer Science</div>
+  <div class="school">Department of Computing</div>
+  <hr>
+  <div class="course">CS 417: Large Language Models (2+1)</div>
+  <div class="term">Fall 2026</div>
+  <div class="assignment">ASSIGNMENT 1</div>
+  <div class="title">Building an Urdu Byte-Pair Encoding<br>Tokenizer from Scratch</div>
+  <div class="subtitle">Assignment Report</div>
+  <table class="members">
+    <caption>Group Members</caption>
+    <thead><tr><th>No.</th><th>Name</th><th>Registration No.</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Ch Daniyal</td><td>453835</td></tr>
+      <tr><td>2</td><td>Malik Muhammad Hassaan</td><td>460233</td></tr>
+      <tr><td>3</td><td>Syed Danish Abbas</td><td>463657</td></tr>
+    </tbody>
+  </table>
+  <div class="submitted"><b>Submitted to:</b>&nbsp;&nbsp; Dr. Naima Iltaf</div>
+  <div class="note"><b>Submission:</b> source code, four-page report, and separately shared large corpus files</div>
+</section>
+
+<section class="page">
+  <div class="running-head"><span>CS 417 · Assignment 1</span><span>Urdu BPE Tokenizer from Scratch</span></div>
+  <h1>Urdu BPE Tokenizer from Scratch</h1>
+  <h2>1. Overview</h2>
+  <p>This report describes a byte-level BPE tokenizer written without a tokenizer library. It was trained on a new Urdu corpus assembled for this submission. The corpus uses Urdu Wikipedia, Urdu Wikisource and Urdu mC4, so it does not reuse Daily Express, Daily Jang, BBC Urdu, Makhzan or CC-100 from the supplied solution. The final vocabulary contains exactly 50,000 token IDs.</p>
+  <table class="compact"><thead><tr><th>Design choice</th><th>Implementation</th></tr></thead><tbody>
+    <tr><td><b>Base vocabulary</b></td><td>IDs 0-255 are raw byte values. This makes every Unicode string lossless and removes the need for an unknown token.</td></tr>
+    <tr><td><b>Special token</b></td><td><code>&lt;|endoftext|&gt;</code> has ID 256 and never enters pair counting or merging.</td></tr>
+    <tr><td><b>Learned merges</b></td><td>49,743 ordered merges occupy IDs 257-49,999. A SHA-256 checksum protects their order in <code>tokenizer.json</code>.</td></tr>
+    <tr><td><b>Tie-breaking</b></td><td>The pair with greatest frequency is selected; tied pairs use the lexicographically greater integer pair.</td></tr>
+    <tr><td><b>Pre-tokenization</b></td><td>The Urdu-aware regex keeps combining marks and internal ZWNJ inside a word and attaches one leading space to the next unit.</td></tr>
+    <tr><td><b>Training</b></td><td>The reference trainer recounts all pairs. The fast trainer uses weighted unique types, a pair-to-word index, local count updates and an encoding cache.</td></tr>
+    <tr><td><b>Normalization</b></td><td>NFC normalization maps Arabic yeh, kaf and heh variants, uses ASCII digits, removes tatweel and controls, and preserves meaningful Urdu heh forms.</td></tr>
+  </tbody></table>
+
+  <h2>2. Corpus and Training Setup</h2>
+  <p>The clean corpus contains <b>609.05 MiB</b>, 129,770 documents, 74,627,570 words and 857,782 unique word forms. The two Wikimedia collectors produced 118.34 MiB of raw self-collected text with per-page provenance records.</p>
+  <table class="compact"><thead><tr><th>Source</th><th>Genre</th><th>Raw MiB</th><th>Clean MiB</th><th>Documents</th><th>Licence or terms</th></tr></thead><tbody><tr><td>Urdu Wikipedia API</td><td>Encyclopedia</td><td>70.54</td><td>22.72</td><td>19,621</td><td>CC BY-SA 4.0 / GFDL</td></tr><tr><td>Urdu Wikisource API</td><td>Literature</td><td>47.80</td><td>43.41</td><td>11,921</td><td>CC BY-SA 4.0 + page notices</td></tr><tr><td>Urdu mC4 (AllenAI C4)</td><td>Diverse web</td><td>560.00</td><td>542.91</td><td>98,228</td><td>ODC-BY; underlying rights vary</td></tr></tbody></table>
+  <p>Cleaning removes wiki and HTML markup, URLs, email addresses, phone-like strings and IP addresses. It applies the idempotent normalizer, filters low-Urdu lines, removes lines found in at least 50 documents, and removes exact normalized duplicates by SHA-256. A source-stratified shuffle with seed 4,172,026 produced a 98/1/1 document split. The three split hash sets are pairwise disjoint.</p>
+  <table class="compact"><thead><tr><th>Item</th><th>Measured value</th></tr></thead><tbody>
+    <tr><td>Training split</td><td>597.20 MiB; 127,173 documents; 73,175,999 words</td></tr>
+    <tr><td>Validation and test</td><td>5.91 MiB and 5.94 MiB</td></tr>
+    <tr><td>Reference versus fast check</td><td>500 identical merges on 1.00 MiB; 428.91 s versus 6.96 s</td></tr>
+    <tr><td>Full training</td><td>31.12 minutes; 8 logical CPUs; 15.7 GiB RAM; Python 3.11.0</td></tr>
+    <tr><td>Encoded output</td><td>88,404,583 train IDs and 876,941 validation IDs, stored as flat <code>uint16</code></td></tr>
+  </tbody></table>
+  <div class="footer"><span></span><span>1</span></div>
+</section>
+
+<section class="page">
+  <div class="running-head"><span>CS 417 · Assignment 1</span><span>Urdu BPE Tokenizer from Scratch</span></div>
+  <h2>3. Question 1: What Did the Merges Learn?</h2>
+  <p>Urdu letters usually occupy two UTF-8 bytes. Early merges therefore rebuild letters before they learn complete words. In the tables below, <b>␠</b> denotes a leading space and byte escapes denote intermediate tokens that are not valid UTF-8 by themselves.</p>
+  <h3>Merges 1-50</h3>
+  <table class="merge-grid"><tr><td><b>#1</b> ا<br><span class='muted'>d8 a7</span></td><td><b>#2</b> ی<br><span class='muted'>db 8c</span></td><td><b>#3</b> \x20\xd8<br><span class='muted'>20 d8</span></td><td><b>#4</b> ک<br><span class='muted'>da a9</span></td><td><b>#5</b> \x20\xd9<br><span class='muted'>20 d9</span></td><td><b>#6</b> ر<br><span class='muted'>d8 b1</span></td><td><b>#7</b> و<br><span class='muted'>d9 88</span></td><td><b>#8</b> ہ<br><span class='muted'>db 81</span></td><td><b>#9</b> ے<br><span class='muted'>db 92</span></td><td><b>#10</b> ␠ک<br><span class='muted'>20 da a9</span></td></tr><tr><td><b>#11</b> ن<br><span class='muted'>d9 86</span></td><td><b>#12</b> \xd8\xa7\xd8<br><span class='muted'>d8 a7 d8</span></td><td><b>#13</b> ل<br><span class='muted'>d9 84</span></td><td><b>#14</b> م<br><span class='muted'>d9 85</span></td><td><b>#15</b> ں<br><span class='muted'>da ba</span></td><td><b>#16</b> ␠م<br><span class='muted'>20 d9 85</span></td><td><b>#17</b> ␠ا<br><span class='muted'>20 d8 a7</span></td><td><b>#18</b> ت<br><span class='muted'>d8 aa</span></td><td><b>#19</b> ␠ہ<br><span class='muted'>20 db 81</span></td><td><b>#20</b> یں<br><span class='muted'>db 8c da ba</span></td></tr><tr><td><b>#21</b> ھ<br><span class='muted'>da be</span></td><td><b>#22</b> ␠س<br><span class='muted'>20 d8 b3</span></td><td><b>#23</b> د<br><span class='muted'>d8 af</span></td><td><b>#24</b> س<br><span class='muted'>d8 b3</span></td><td><b>#25</b> ␠ب<br><span class='muted'>20 d8 a8</span></td><td><b>#26</b> گ<br><span class='muted'>da af</span></td><td><b>#27</b> ␠ن<br><span class='muted'>20 d9 86</span></td><td><b>#28</b> ␠پ<br><span class='muted'>20 d9 be</span></td><td><b>#29</b> ب<br><span class='muted'>d8 a8</span></td><td><b>#30</b> ␠ت<br><span class='muted'>20 d8 aa</span></td></tr><tr><td><b>#31</b> ور<br><span class='muted'>d9 88 d8 b1</span></td><td><b>#32</b> ␠کی<br><span class='muted'>20 da a9 db 8c</span></td><td><b>#33</b> ان<br><span class='muted'>d8 a7 d9 86</span></td><td><b>#34</b> ␠کے<br><span class='muted'>20 da a9 db 92</span></td><td><b>#35</b> \x20\xd8\xa7\xd8<br><span class='muted'>20 d8 a7 d8</span></td><td><b>#36</b> ۔<br><span class='muted'>db 94</span></td><td><b>#37</b> ار<br><span class='muted'>d8 a7 d8 b1</span></td><td><b>#38</b> ␠ج<br><span class='muted'>20 d8 ac</span></td><td><b>#39</b> ␠د<br><span class='muted'>20 d8 af</span></td><td><b>#40</b> ␠میں<br><span class='muted'>20 d9 85 db 8c da ba</span></td></tr><tr><td><b>#41</b> ف<br><span class='muted'>d9 81</span></td><td><b>#42</b> ق<br><span class='muted'>d9 82</span></td><td><b>#43</b> ␠و<br><span class='muted'>20 d9 88</span></td><td><b>#44</b> ٹ<br><span class='muted'>d9 b9</span></td><td><b>#45</b> چ<br><span class='muted'>da 86</span></td><td><b>#46</b> ع<br><span class='muted'>d8 b9</span></td><td><b>#47</b> ␠ہے<br><span class='muted'>20 db 81 db 92</span></td><td><b>#48</b> ال<br><span class='muted'>d8 a7 d9 84</span></td><td><b>#49</b> وں<br><span class='muted'>d9 88 da ba</span></td><td><b>#50</b> ␠کر<br><span class='muted'>20 da a9 d8 b1</span></td></tr></table>
+  <div class="two">
+    <div><h3>Token created at every 5,000th merge</h3>
+      <table class="compact"><thead><tr><th>Merge</th><th>ID</th><th>Token</th><th>Bytes</th></tr></thead><tbody><tr><td>5,000</td><td>5,256</td><td class='rtl'>ضر</td><td>4</td></tr><tr><td>10,000</td><td>10,256</td><td class='rtl'>میمی</td><td>8</td></tr><tr><td>15,000</td><td>15,256</td><td class='rtl'>َۃُ</td><td>6</td></tr><tr><td>20,000</td><td>20,256</td><td class='rtl'>␠البغ</td><td>9</td></tr><tr><td>25,000</td><td>25,256</td><td class='rtl'>␠کھنڈرات</td><td>15</td></tr><tr><td>30,000</td><td>30,256</td><td class='rtl'>␠مستعادہ</td><td>15</td></tr><tr><td>35,000</td><td>35,256</td><td class='rtl'>␠سہانے</td><td>11</td></tr><tr><td>40,000</td><td>40,256</td><td class='rtl'>␠وچھ</td><td>7</td></tr><tr><td>45,000</td><td>45,256</td><td class='rtl'>␠اشکالات</td><td>15</td></tr></tbody></table>
+    </div>
+    <div><h3>Early reconstruction</h3>
+      <p><b>Letters rebuilt in the first 200 merges:</b> <span class='rtl'>ا</span> #1 · <span class='rtl'>ی</span> #2 · <span class='rtl'>ک</span> #4 · <span class='rtl'>ر</span> #6 · <span class='rtl'>و</span> #7 · <span class='rtl'>ہ</span> #8 · <span class='rtl'>ے</span> #9 · <span class='rtl'>ن</span> #11 · <span class='rtl'>ل</span> #13 · <span class='rtl'>م</span> #14 · <span class='rtl'>ں</span> #15 · <span class='rtl'>ت</span> #18 · <span class='rtl'>ھ</span> #21 · <span class='rtl'>د</span> #23 · <span class='rtl'>س</span> #24 · <span class='rtl'>گ</span> #26 · <span class='rtl'>ب</span> #29 · <span class='rtl'>۔</span> #36 · <span class='rtl'>ف</span> #41 · <span class='rtl'>ق</span> #42 · <span class='rtl'>ٹ</span> #44 · <span class='rtl'>چ</span> #45 · <span class='rtl'>ع</span> #46 · <span class='rtl'>ج</span> #53.</p>
+      <p>The first attested space-prefixed whole Urdu word is <b class="rtl">␠کی</b> at merge 32 (ID 288). Earlier merges mainly reconstruct individual letters and space-plus-lead-byte fragments.</p>
+      <p>There are 106 learned tokens that are invalid UTF-8 alone. They are legal internal byte fragments and can be completed by later merges. Examples: #3 <code>20 d8</code> · #5 <code>20 d9</code> · #12 <code>d8 a7 d8</code> · #35 <code>20 d8 a7 d8</code> · #93 <code>e2 80</code> · #435 <code>20 e2 80</code>.</p>
+    </div>
+  </div>
+  <p>The progression is consistent with byte BPE. Frequent letter bytes are joined first, followed by common suffixes, function words and longer domain-specific strings. By merge 5,000, several regular Urdu words and names are already represented by single tokens.</p>
+  <div class="footer"><span></span><span>2</span></div>
+</section>
+
+<section class="page">
+  <div class="running-head"><span>CS 417 · Assignment 1</span><span>Urdu BPE Tokenizer from Scratch</span></div>
+  <h2>3.1 Vocabulary Shape and Long Tokens</h2>
+  <div class="two">
+    <div><h3>Twenty longest learned tokens</h3><table class="compact"><thead><tr><th>#</th><th>ID</th><th>Token</th><th>B</th><th>Chars</th></tr></thead><tbody><tr><td>1</td><td>40886</td><td class='rtl token'>␠آبادسندھپنجاببلوچستانخیبر</td><td>51</td><td>26</td></tr><tr><td>2</td><td>46806</td><td class='rtl token'>صلی‌اللہ‌علیہ‌وآلہ‌وسلم</td><td>50</td><td>23</td></tr><tr><td>3</td><td>34898</td><td class='rtl token'>‌اللہ‌علیہ‌وآلہ‌وسلم</td><td>44</td><td>20</td></tr><tr><td>4</td><td>40738</td><td class='rtl token'>سندھپنجاببلوچستانخیبر</td><td>42</td><td>21</td></tr><tr><td>5</td><td>43776</td><td class='rtl token'>␠۔۔۔۔۔۔۔۔۔۔۔۔۔۔۔۔۔۔۔۔</td><td>41</td><td>21</td></tr><tr><td>6</td><td>40826</td><td class='rtl token'>␠بلتستاندنیابزنستعلیم</td><td>41</td><td>21</td></tr><tr><td>7</td><td>47163</td><td class='rtl token'>␠ابراہیمعلیہ‌السلام</td><td>38</td><td>19</td></tr><tr><td>8</td><td>40782</td><td class='rtl token'>␠پختونخواہکشمیرگلگت</td><td>37</td><td>19</td></tr><tr><td>9</td><td>34897</td><td class='rtl token'>‌اللہ‌علیہ‌وآلہ‌</td><td>36</td><td>16</td></tr><tr><td>10</td><td>48828</td><td class='rtl token'>␠خیبرپختونخواحکومت</td><td>35</td><td>18</td></tr><tr><td>11</td><td>48598</td><td class='rtl token'>␠گورنرخیبرپختونخوا</td><td>35</td><td>18</td></tr><tr><td>12</td><td>28958</td><td class='rtl token'>␠۔۔۔۔۔۔۔۔۔۔۔۔۔۔۔۔۔</td><td>35</td><td>18</td></tr><tr><td>13</td><td>40737</td><td class='rtl token'>سندھپنجاببلوچستان</td><td>34</td><td>17</td></tr><tr><td>14</td><td>43184</td><td class='rtl token'>␠ڈاکٹرطاہرالقادری</td><td>33</td><td>17</td></tr><tr><td>15</td><td>15691</td><td class='rtl token'>۔۔۔۔۔۔۔۔۔۔۔۔۔۔۔۔</td><td>32</td><td>16</td></tr><tr><td>16</td><td>46769</td><td class='rtl token'>␠خیبرپختونخوامیں</td><td>31</td><td>16</td></tr><tr><td>17</td><td>44079</td><td class='rtl token'>␠الْمُؤْمِنِیْنَ</td><td>31</td><td>16</td></tr><tr><td>18</td><td>22131</td><td class='rtl token'>␠BassersdorfZurichSwitzerlandP</td><td>30</td><td>30</td></tr><tr><td>19</td><td>49245</td><td class='rtl token'>␠کاربوہائیڈریٹس</td><td>29</td><td>15</td></tr><tr><td>20</td><td>34779</td><td class='rtl token'>‌اللہ‌علیہ‌وآ</td><td>29</td><td>13</td></tr></tbody></table></div>
+    <div><img class="plot" src="file:///C:/Users/Hanzalah%20laptops7390/Downloads/assignment%201/urdu-bpe-tokenzier/data/merge_lengths.png"><div class="caption">Figure 1. Learned token length across the 49,743 merge iterations.</div>
+      <p>Later merges combine recurring morphemes, space-prefixed words, names, punctuation and web-specific strings. Very long tokens also reveal residual boilerplate or unusual web text. For this reason, the longest-token table is useful both as a tokenizer result and as a corpus-quality check.</p>
+      <h3>Implementation checks</h3><ul><li>All 23 focused unit tests pass.</li><li>Forty randomized reference and fast trainer checks pass.</li><li>Empty strings, emoji, English, Urdu, newlines and the special marker round trip without loss.</li><li>Maximum encoded token ID is 49,999, which fits <code>uint16</code>.</li></ul>
+    </div>
+  </div>
+
+  <h2>4. Question 2: Comparison with Existing Tokenizers</h2>
+  <p>The held-out test split contains 743,572 words and 5.92 MiB after removing document markers. GPT-2 and <code>o200k_base</code> are used only for comparison, never for training or encoding our corpus.</p>
+  <div class="two">
+    <div><table class="compact"><thead><tr><th>Tokenizer</th><th>Total tokens</th><th>Tokens/word</th><th>Bytes/token</th></tr></thead><tbody><tr><td>ours</td><td>882,054</td><td>1.186</td><td>7.040</td></tr><tr><td>gpt2</td><td>4,443,678</td><td>5.976</td><td>1.397</td></tr><tr><td>o200k_base</td><td>1,214,076</td><td>1.633</td><td>5.114</td></tr></tbody></table>
+      <p>Our tokenizer uses 5.04 times fewer tokens than GPT-2 and 1.38 times fewer than <code>o200k_base</code> on this test set. The result reflects specialization to the training domains rather than a general ranking across languages.</p>
+    </div>
+    <div><img class="plot" src="file:///C:/Users/Hanzalah%20laptops7390/Downloads/assignment%201/urdu-bpe-tokenzier/data/tokens_per_word.png"><div class="caption">Figure 2. Tokens per word on the test split and seven required input types; lower is better.</div></div>
+  </div>
+  <div class="footer"><span></span><span>3</span></div>
+</section>
+
+<section class="page">
+  <div class="running-head"><span>CS 417 · Assignment 1</span><span>Urdu BPE Tokenizer from Scratch</span></div>
+  <h2>4.1 Results on the Seven Required Inputs</h2>
+  <table class="compact"><thead><tr><th>Input type</th><th>Words</th><th>Ours</th><th>o200k_base</th><th>GPT-2</th></tr></thead><tbody><tr><td>news</td><td>17</td><td>1.06</td><td>1.59</td><td>6.82</td></tr><tr><td>poetry</td><td>23</td><td>1.17</td><td>1.26</td><td>5.43</td></tr><tr><td>urdu english</td><td>14</td><td>1.50</td><td>1.29</td><td>3.79</td></tr><tr><td>roman urdu</td><td>14</td><td>2.50</td><td>1.43</td><td>1.64</td></tr><tr><td>numbers dates</td><td>16</td><td>1.19</td><td>1.81</td><td>4.19</td></tr><tr><td>diacritics</td><td>8</td><td>2.50</td><td>5.25</td><td>8.50</td></tr><tr><td>personal names</td><td>14</td><td>1.21</td><td>2.14</td><td>7.43</td></tr></tbody></table>
+  <p>News, poetry, dates and personal names benefit from the Urdu-focused vocabulary. Roman Urdu is less efficient because abbreviated Latin chat spellings are rare in the corpus. Fully vowelled Arabic-style text also needs more pieces because its combining-mark sequences are sparse.</p>
+
+  <h2>5. Question 3: Inputs the Tokenizer Handles Badly</h2>
+  <h3>Case 1: Roman Urdu with shortened spellings</h3><p class='sample rtl'>yr plzz mjhy bta do assignment kb submit krni hy???</p><p>Ours: 2.50 tokens/word; o200k_base: 1.50; GPT-2: 1.70. Training is overwhelmingly Perso-Arabic, so shortened Latin spellings and repeated punctuation fall back to small byte pieces.</p><p class='pieces'>Pieces: yr | ␠pl | z | z | ␠m | j | hy | ␠b | ta | ␠do | ␠as | s</p><h3>Case 2: Heavily vowelled Arabic-style text</h3><p class='sample rtl'>قُرْآنِ حَکِیْمْ کِی تِلَاوَتْ بِالتَّجْوِیْدِ</p><p>Ours: 3.80 tokens/word; o200k_base: 6.80; GPT-2: 11.00. The regex correctly keeps marks with the word, but rare fully-vowelled combinations did not occur often enough to earn long merges.</p><p class='pieces'>Pieces: ق | ُرْآن | ِ | ␠حَک | ِیْم | ْ | ␠ک | ِی | ␠ت | ِلَ | او | َتْ</p><h3>Case 3: Mixed technical identifier</h3><p class='sample rtl'>ماڈل ID XQ-97_v2.4 کا SHA256=9f86d081884c7d65 ہے۔</p><p>Ours: 1.45 tokens/word; o200k_base: 1.40; GPT-2: 2.00. Mixed identifiers are intentionally lossless, yet uncommon letter-digit-symbol sequences remain fragmented.</p><p class='pieces'>Pieces: ماڈل | ␠ID | ␠X | Q | - | 97 | _ | v | 2 | . | 4 | ␠کا</p>
+
+  <h2>6. Deliverables and Reproduction</h2>
+  <p>The repository includes the normalizer, both BPE trainers, collection and cleaning scripts, deterministic splitter, streaming encoder, tests, <code>tokenizer.json</code>, data card, analysis JSON and this report. The large-file folder should contain <code>train.txt</code>, <code>val.txt</code>, <code>test.txt</code>, <code>train.bin</code> and <code>val.bin</code>.</p>
+  <pre><code>python -m unittest discover -s tests -v
+python train_tokenizer.py --input corpus/train.txt --vocab-size 50000
+python encode_corpus.py --tokenizer tokenizer.json
+python scripts/analyze_tokenizer.py
+python scripts/generate_report_pdf.py</code></pre>
+  <div class="footer"><span></span><span>4</span></div>
+</section>
+</body></html>

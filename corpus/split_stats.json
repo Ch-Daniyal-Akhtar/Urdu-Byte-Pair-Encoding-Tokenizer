@@ -1,0 +1,33 @@
+{
+  "seed": 4172026,
+  "strategy": "source-stratified document shuffle",
+  "train": {
+    "documents": 127173,
+    "bytes": 626210861,
+    "source_documents": {
+      "mc4_ur": 96263,
+      "wikipedia_api": 19228,
+      "wikisource_api": 11682
+    }
+  },
+  "val": {
+    "documents": 1297,
+    "bytes": 6193229,
+    "source_documents": {
+      "mc4_ur": 982,
+      "wikipedia_api": 196,
+      "wikisource_api": 119
+    }
+  },
+  "test": {
+    "documents": 1300,
+    "bytes": 6226186,
+    "source_documents": {
+      "mc4_ur": 983,
+      "wikipedia_api": 197,
+      "wikisource_api": 120
+    }
+  },
+  "leakage_check": "passed: document SHA-256 sets are pairwise disjoint",
+  "unique_document_hashes": 129770
+}
